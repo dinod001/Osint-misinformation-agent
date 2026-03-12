@@ -18,11 +18,9 @@ def setup_logger(name: str):
         logging.Logger: Configured logger instance
     """
     
-    # Create logs directory if it doesn't exist
-    log_dir = os.path.join(BASE_DIR, params["paths"]["logs_dir"])
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-
+    # Detect if running on Vercel (read-only filesystem)
+    IS_VERCEL = os.environ.get("VERCEL") == "1"
+    
     # Initialize the logger
     logger = logging.getLogger(name)
     
@@ -30,33 +28,38 @@ def setup_logger(name: str):
     if logger.hasHandlers():
         return logger
 
-    # Set base logging level (INFO captures Info, Warning, Error, and Critical)
+    # Set base logging level
     logger.setLevel(logging.INFO)
 
-    # Define the log format: [Timestamp] - [Module Name] - [Level] - [Message]
+    # Define the log format
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    # 1. Rotating File Handler:
-    # Max size 5MB per file, keeps up to 5 old log files as backups.
-    log_file = os.path.join(log_dir, "osint_misinformation_agent.log")
-    file_handler = RotatingFileHandler(
-        log_file, 
-        maxBytes=5 * 1024 * 1024, 
-        backupCount=5
-    )
-    file_handler.setFormatter(formatter)
-
-    # 2. Console Handler:
-    # Allows developers to see logs in the terminal in real-time.
+    # 1. Console Handler (Always enabled)
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-
-    # Attach both handlers to the logger
-    logger.addHandler(file_handler)
     logger.addHandler(console_handler)
+
+    # 2. Rotating File Handler (Only if NOT on Vercel)
+    if not IS_VERCEL:
+        try:
+            log_dir = os.path.join(BASE_DIR, params["paths"]["logs_dir"])
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir)
+
+            log_file = os.path.join(log_dir, "osint_misinformation_agent.log")
+            file_handler = RotatingFileHandler(
+                log_file, 
+                maxBytes=5 * 1024 * 1024, 
+                backupCount=5
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
+        except Exception as e:
+            # Fallback if directory creation fails for any other reason
+            print(f"Warning: Could not setup file logging: {e}")
 
     return logger
 
