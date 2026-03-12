@@ -1,163 +1,82 @@
-# 🛡️ OSINT Misinformation Agent
+# ☠ WARWATCH — OSINT Misinformation Intelligence
 
-An AI-powered fake news & misinformation detection system that uses **real-time web search** and **LLMs** to fact-check claims — with a **semantic vector cache (CAG)** to avoid redundant lookups.
-
-Built to detect war-related misinformation, geopolitical false claims, and other viral fake news circulating in real time.
+**WarWatch** is a cutting-edge OSINT (Open Source Intelligence) tool designed to detect and analyze geopolitical misinformation and fake news in real-time. Built with a tactical military aesthetic, it provides users with a high-fidelity terminal interface to verify claims using AI and live web searches.
 
 ---
 
-## 🧠 How It Works
+## 🏗 System Architecture
 
-```
-User Query (Claim to verify)
-        │
-        ▼
-┌──────────────────────┐
-│  CAG Semantic Cache  │ ──── HIT ────► Return cached verdict instantly (< 2s, $0)
-│  (Qdrant cag_cache)  │
-└──────────────────────┘
-        │ MISS
-        ▼
-┌──────────────────────┐
-│  Tavily Web Search   │  Real-time OSINT from trusted news sources
-└──────────────────────┘
-        │
-        ▼
-┌──────────────────────┐
-│   GPT-4o-mini LLM    │  Fact-check evidence → structured JSON verdict
-└──────────────────────┘
-        │
-        ▼
-┌──────────────────────┐
-│  Cache Result in     │  Store embedding in Qdrant for future semantic hits
-│  Qdrant (CAG)        │
-└──────────────────────┘
-        │
-        ▼
-     Verdict
+```mermaid
+graph TD
+    User((User)) -->|Upload Image/Text| UI[Tactical Frontend]
+    UI -->|POST /analyze-image| VP[Vision Provider AI]
+    VP -->|Extracted Claim| UI
+    UI -->|Auto-Trigger| Verify[POST /verify]
+    
+    Verify --> Cache{CAG Cache Hit?}
+    Cache -->|Yes| UI
+    Cache -->|No| Search[Tavily OSINT Search]
+    Search --> LLM[LLM Analysis]
+    LLM --> UI
+    LLM -->|Update| Cache
 ```
 
-### Verdict Format
-```json
-{
-  "verdict": "FALSE",
-  "confidence_score": "90%",
-  "explanation": "Brief 2-3 sentence explanation...",
-  "top_sources": ["https://reuters.com/...", "https://bbc.com/..."]
-}
-```
+## 🛡 Features
 
-**Verdict options:** `TRUE` | `FALSE` | `MISLEADING` | `UNVERIFIED`
+- **Multimodal Intelligence**: 
+    - **Image Extraction**: Integrated **GPT-4o-mini Vision** to extract factual claims from images (screenshots, social media posts).
+    - **Auto-Verification**: Seamlessly triggers the verification pipeline once intelligence is extracted.
+- **Real-Time Verification**: Connects to the **Tavily Search API** to cross-reference claims against credible global news sources.
+- **CAG (Context-Augmented Generation) Cache**: Implements a high-performance semantic cache using **Qdrant Vector Database** to reduce latency and API costs for repeating queries.
+- **Premium Tactical UI**: A futuristic military terminal design featuring brushed metal textures, scanlines, and glowing interactive elements.
 
----
+## 🚀 Tech Stack
 
-## ✅ Completed Components
+- **Backend**: FastAPI (Python)
+- **AI/LLM**: OpenAI (GPT-4o-mini, Embeddings)
+- **Search**: Tavily OSINT API
+- **Database**: Qdrant Cloud (Vector Store)
+- **Frontend**: Vanilla HTML5, CSS3 (Modern Glassmorphism), JavaScript (Async/Await)
 
-| Module | File | Description |
-|--------|------|-------------|
-| **Config Loader** | `src/config.py` | Loads `param.yaml` + `models.yaml` + `.env` |
-| **LLM Provider** | `src/infrastructure/llm/llm_provider.py` | GPT-4o-mini via LangChain, returns structured JSON |
-| **Embeddings** | `src/infrastructure/llm/embeddings.py` | OpenAI `text-embedding-3-small` (1536d) |
-| **Qdrant Manager** | `src/infrastructure/db/qdrant_manager.py` | Qdrant Cloud connection, collection management |
-| **Web Search Tool** | `src/agents/tools/web_search_tool.py` | Tavily AI-powered real-time search |
-| **Agent Prompt** | `src/agents/prompts/agent_prompts.py` | OSINT fact-checker system prompt |
-| **CAG Cache** | `src/services/chat_service/cag_cache.py` | Semantic vector cache (KNN-1 cosine similarity) |
-| **CAG Service** | `src/services/chat_service/cag_service.py` | Orchestrates full pipeline |
+## 🛠 Setup & Installation
 
----
+1. **Clone the repository**:
+   ```bash
+   git clone <your-repo-url>
+   cd osint-misinformation-agent
+   ```
 
-## 🗂️ Project Structure
+2. **Create a Virtual Environment**:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
 
-```
-src/
-├── config.py                          # YAML + env config loader
-├── logger.py                          # Logging setup
-├── agents/
-│   ├── prompts/
-│   │   └── agent_prompts.py           # LangChain fact-check prompt
-│   └── tools/
-│       └── web_search_tool.py         # Tavily web search
-├── infrastructure/
-│   ├── db/
-│   │   └── qdrant_manager.py          # Qdrant Cloud client
-│   └── llm/
-│       ├── embeddings.py              # OpenAI embeddings
-│       └── llm_provider.py            # GPT-4o-mini chain
-└── services/
-    └── chat_service/
-        ├── cag_cache.py               # Semantic CAG cache
-        └── cag_service.py             # Main pipeline orchestrator
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-config/
-├── param.yaml                         # Runtime parameters (thresholds, TTL, etc.)
-└── models.yaml                        # Model name registry (OpenAI, Anthropic, etc.)
-```
+4. **Configure Environment Variables**:
+   Create a `.env` file in the root directory:
+   ```env
+   OPENAI_API_KEY=your_openai_key
+   TAVILY_API_KEY=your_tavily_key
+   QDRANT_URL=your_qdrant_url
+   QDRANT_API_KEY=your_qdrant_api_key
+   ```
 
----
+5. **Run the Application**:
+   ```bash
+   uvicorn main:app --reload
+   ```
 
-## ⚙️ Setup
+## 🌐 Deployment (Vercel)
 
-### 1. Clone & Install
-```bash
-git clone https://github.com/your-repo/osint-misinformation-agent.git
-cd osint-misinformation-agent
-pip install -r requirements.txt
-```
+This project is optimized for deployment on **Vercel**. 
+1. Build and push your code to GitHub.
+2. Link the repository to Vercel and add environment variables.
+3. Deployment is automatic!
 
-### 2. Configure Environment
-Create a `.env` file in the project root:
-```env
-OPENAI_API_KEY=sk-...
-TAVILY_API_KEY=tvly-...
-QDRANT_URL=https://xxxxx.us-east.aws.cloud.qdrant.io
-QDRANT_API_KEY=your-qdrant-api-key
-```
-
-### 3. Run
-```bash
-python src/services/chat_service/cag_service.py
-```
-
----
-
-## 🔧 Configuration
-
-Edit `config/param.yaml` to tune behavior:
-
-```yaml
-cag:
-  similarity_threshold: 0.90   # Min cosine similarity for cache hit (0.90–0.95)
-  cache_ttl: 86400             # Cache TTL in seconds (24h). 0 = no expiry
-
-embedding:
-  tier: small                  # "small" = 1536d, uses text-embedding-3-small
-  embedding_dim: 1536
-
-qdrant:
-  collection_name: osint_misinformation_agent
-```
-
-Edit `config/models.yaml` to switch LLM providers (OpenAI, Anthropic, Google, Groq).
-
----
-
-## 📦 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| LLM | OpenAI GPT-4o-mini (via LangChain) |
-| Embeddings | OpenAI text-embedding-3-small |
-| Vector DB | Qdrant Cloud |
-| Web Search | Tavily AI |
-| Framework | LangChain + FastAPI |
-| Cache | CAG — Semantic vector cache on Qdrant |
-
----
-
-## 🚧 Roadmap
-
-- [ ] FastAPI REST API endpoint (`POST /verify`)
-- [ ] Multi-claim batch verification
-- [ ] Telegram / WhatsApp bot integration
-- [ ] Support for Sinhala language claims
-- [ ] Dashboard UI for verdicts
+## ☠ Disclaimer
+*Verdicts are AI-generated based on available online data. Always verify critical information independently.*
