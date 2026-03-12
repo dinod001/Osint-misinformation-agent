@@ -118,7 +118,7 @@ class CAGCache:
         self._client = get_qdrant_client()
         try:
             if not collection_exists(self.collection_name):
-                ensure_collection()
+                ensure_collection(self.collection_name)
             self._available = True
             logger.info(
                 "CAG cache ready (Qdrant collection='%s', dim=%d, threshold=%.2f)",
@@ -168,6 +168,14 @@ class CAGCache:
             )
             points = result.points
         except Exception as exc:
+            # If collection is missing at runtime, disable cache and log error
+            if "404" in str(exc) or "Not found" in str(exc):
+                logger.warning("CAG cache collection '%s' missing at runtime. Attempting to recreate...", self.collection_name)
+                try:
+                    ensure_collection(self.collection_name)
+                except Exception:
+                    self._available = False
+            
             logger.error("CAG cache: search failed: %s", exc)
             return None
         
@@ -238,6 +246,11 @@ class CAGCache:
             )
             logger.info("CAG cache SET for query: %s", query)
         except Exception as exc:
+            if "404" in str(exc) or "Not found" in str(exc):
+                 try:
+                    ensure_collection(self.collection_name)
+                 except Exception:
+                    pass
             logger.error("CAG cache: upsert failed: %s", exc)
     
     def clear(self) -> None:

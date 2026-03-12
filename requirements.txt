@@ -25,8 +25,9 @@ tavily-python>=0.3.3              # Tavily API client for AI-optimized web searc
 # ========================================
 # API and Frameworks
 # ========================================
-fastapi>=0.109.0                  # FastAPI framework for building the API
-uvicorn>=0.27.0                   # ASGI server for running the FastAPI application
+fastapi>=0.109.0
+python-multipart
+uvicorn>=0.27.0
 python-dotenv>=1.0.0              # Manage environment variables from .env files
 pydantic>=2.5.0                   # Data validation using Python type hints
 pydantic-settings>=2.1.0          # Settings management for Pydantic v2

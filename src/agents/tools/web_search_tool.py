@@ -70,7 +70,7 @@ class WebSearchTool:
             latency_ms = int((time.perf_counter() - start) * 1000)
 
             results = response.get("results", [])
-            logger.info("Tavily search: %s results in %.2f seconds", len(results), latency_ms)
+            logger.info("Tavily search: %s results in %.2f ms", len(results), latency_ms)
             
             
             # ── rank & format ─────────────────────────────────────

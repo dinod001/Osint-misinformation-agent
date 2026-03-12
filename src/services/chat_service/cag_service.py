@@ -81,8 +81,5 @@ class CAGService:
             logger.info("CAG cache miss for query: %s in %dms", query, latency_ms)
             return llm_answer
 
-# testing
-service = CAGService()
-print(service.generate("does iran attack sri lanka recently"))
         
         
