@@ -29,8 +29,8 @@ openai:
     strong: gpt-4o
     reason: o3-mini
   embedding:
-    default: text-embedding-3-large
-    small: text-embedding-3-small
+    default: text-embedding-3-small
+    large: text-embedding-3-large
 
 anthropic:
   chat:

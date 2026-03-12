@@ -67,7 +67,7 @@ class WebSearchTool:
             )
             if not response:
                 return "No web results found for your query."
-            latency_ms = int((time.time() - start) * 1000)
+            latency_ms = int((time.perf_counter() - start) * 1000)
 
             results = response.get("results", [])
             logger.info("Tavily search: %s results in %.2f seconds", len(results), latency_ms)
@@ -96,7 +96,3 @@ class WebSearchTool:
         except Exception as exc:
             logger.error("Tavily search failed: %s", exc)
             return "Something went wrong while searching the web."
-
-# sample test
-tool  = WebSearchTool()
-print(tool.search("does iran attack sri lanka recently"))

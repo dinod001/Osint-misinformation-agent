@@ -45,11 +45,16 @@ from typing import Any,Dict,Optional
 
 from logger import setup_logger
 from config import params
-from src.infrastructure.db.qdrant_client import (
-    get_qdrant_client,
-    collection_exists,
-    ensure_collection
-)
+try:
+    from infrastructure.db.qdrant_manager import (
+        get_qdrant_client,
+        collection_exists,
+        ensure_collection
+    )
+except ImportError:
+    # Fallback or error handling if qdrant_manager is not available
+    # For now, we'll just re-raise or log a warning if it's critical
+    raise
 from qdrant_client.http.models import PointStruct
 
 logger = setup_logger(__name__)
@@ -112,24 +117,18 @@ class CAGCache:
 
         self._client = get_qdrant_client()
         try:
-            from infrastructure.db.qdrant_client import (
-                get_qdrant_client,
-                collection_exists,
-            )
-
-            self._client = get_qdrant_client()
             if not collection_exists(self.collection_name):
                 ensure_collection()
             self._available = True
             logger.info(
-                "✓ CAG cache ready (Qdrant collection='{}', dim={}, threshold={:.2f})",
+                "CAG cache ready (Qdrant collection='%s', dim=%d, threshold=%.2f)",
                 self.collection_name,
                 self.dim,
                 self.similarity_threshold,
             )
         except Exception as exc:
             logger.warning(
-                "CAG cache DISABLED — Qdrant unavailable: {}. "
+                "CAG cache DISABLED — Qdrant unavailable: %s. "
                 "All lookups will miss; every query runs full RAG.",
                 exc,
             )
@@ -148,7 +147,7 @@ class CAGCache:
             query: Natural-language question.
 
         Returns:
-            Dict with ``query``, ``answer``, ``evidence_urls``, ``ts``,
+            Dict with ``query``, ``verdict``, ``confidence_score``, ``explanation``, ``top_sources``, ``ts``,
             ``score`` — or ``None`` on miss.
         """
         if not self._available:
@@ -161,12 +160,13 @@ class CAGCache:
             return None
         
         try:
-            points = self._client.search(
+            result = self._client.query_points(
                 collection_name=self.collection_name,
-                query_vector=vec,
+                query=vec,
                 limit=1,
                 with_payload=True,
             )
+            points = result.points
         except Exception as exc:
             logger.error("CAG cache: search failed: %s", exc)
             return None
@@ -189,8 +189,10 @@ class CAGCache:
 
         return {
             "query": payload["query"],
-            "answer": payload["answer"],
-            "evidence_urls": json.loads(payload["evidence_urls"]),
+            "verdict":payload["verdict"],
+            "confidence_score":payload["confidence_score"],
+            "explanation":payload["explanation"],
+            "top_sources":payload["top_sources"],
             "ts": payload["ts"],
             "score": score,
         }
@@ -201,7 +203,7 @@ class CAGCache:
 
         Args:
             query: Original user query.
-            response: Dict with ``answer`` and optionally ``evidence_urls``.
+            response: Dict with ``verdict``, ``confidence_score``, ``explanation``, ``top_sources``. ``ts``
         """
         if not self._available:
             return
@@ -210,14 +212,16 @@ class CAGCache:
         try:
             query_vec = self.embedder.embed_query(query)
         except Exception as exc:
-            logger.warning("CAG embed failed on SET: {}", exc)
+            logger.warning("CAG embed failed on SET: %s", exc)
             return
         
         point_id = str(uuid.uuid4())
         payload = {
             "query": query,
-            "answer": response["answer",""],
-            "evidence_urls": json.dumps(response.get("evidence_urls", [])),
+            "verdict":response["verdict"],
+            "confidence_score":response["confidence_score"],
+            "explanation":response["explanation"],
+            "top_sources":response["top_sources"],
             "ts": time.time(),
         }
 
@@ -248,7 +252,7 @@ class CAGCache:
 
         try:
             self._client.delete_collection(self.collection_name)
-            logger.info("Dropped CAG cache collection '{}'", self.collection_name)
+            logger.info("Dropped CAG cache collection '%s'", self.collection_name)
         except Exception:
             pass  # Collection may not exist
 

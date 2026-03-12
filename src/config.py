@@ -44,6 +44,9 @@ QDRANT_URL = os.getenv("QDRANT_URL")
 # Tavily
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
 
+# Open AI API
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 
 # Timezone (used by web_search_tool for timestamp display)
 TIMEZONE = "Asia/Colombo"
