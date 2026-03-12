@@ -31,3 +31,7 @@ python-dotenv>=1.0.0              # Manage environment variables from .env files
 pydantic>=2.5.0                   # Data validation using Python type hints
 pydantic-settings>=2.1.0          # Settings management for Pydantic v2
 
+# ========================================
+# Timezone Data
+# ========================================
+tzdata>=2024.2

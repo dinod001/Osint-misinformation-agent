@@ -18,6 +18,7 @@ embedding:
   tier: small
   batch_size: 100
   show_progress: false
+  embedding_dim: 1536
 
 # ============================================================================
 # Chunking Configuration

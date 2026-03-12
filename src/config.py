@@ -36,3 +36,14 @@ def get_config():
 config = get_config()
 params = config["params"]
 models = config["models"]
+
+# Qdrant 
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+QDRANT_URL = os.getenv("QDRANT_URL")
+
+# Tavily
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+
+# Timezone (used by web_search_tool for timestamp display)
+TIMEZONE = "Asia/Colombo"
