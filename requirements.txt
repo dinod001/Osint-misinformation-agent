@@ -1,0 +1,33 @@
+# Agentic Memory Design — Dependencies
+# Python 3.10+
+# Install: pip install -r requirements.txt
+
+# ========================================
+# Core LLM and Embedding Services
+# ========================================
+openai>=1.12.0                    # OpenAI API for GPT models and embeddings
+
+# ========================================
+# LangChain Ecosystem (Primary RAG Framework)
+# ========================================
+langchain>=0.1.0                  # Core LangChain framework
+langchain-core>=0.1.0             # Core abstractions (prompts, runnables)
+langchain-community>=0.0.20       # Community integrations (includes Chroma)
+langchain-openai>=0.0.5           # OpenAI LangChain integration (Chat + Embeddings)
+langchain-text-splitters>=0.2.0   # Text chunking utilities (semantic & fixed)
+
+# ========================================
+# Database and External Services
+# ========================================
+qdrant-client>=1.9.0              # Qdrant vector database client for storing embeddings
+tavily-python>=0.3.3              # Tavily API client for AI-optimized web search
+
+# ========================================
+# API and Frameworks
+# ========================================
+fastapi>=0.109.0                  # FastAPI framework for building the API
+uvicorn>=0.27.0                   # ASGI server for running the FastAPI application
+python-dotenv>=1.0.0              # Manage environment variables from .env files
+pydantic>=2.5.0                   # Data validation using Python type hints
+pydantic-settings>=2.1.0          # Settings management for Pydantic v2
+
